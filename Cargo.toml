@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = [
+    "common",
+    "contracts/carbon-token",
+    "contracts/marketplace",
+    "contracts/escrow",
+    "contracts/verification-records",
+    "contracts/audit-log",
+    "contracts/governance",
+]
