@@ -424,6 +424,7 @@ checksum = "2bfcf67fea2815c2fc3b90873fae90957be12ff417335dfadc7f52927feb03b2"
 name = "escrow"
 version = "0.1.0"
 dependencies = [
+ "carbon-token",
  "common",
  "soroban-sdk",
 ]
@@ -698,7 +699,9 @@ checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 name = "marketplace"
 version = "0.1.0"
 dependencies = [
+ "carbon-token",
  "common",
+ "escrow",
  "soroban-sdk",
 ]
 
