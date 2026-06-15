@@ -1,0 +1,14 @@
+[package]
+name = "integration-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+soroban-sdk = { version = "21.0.0", features = ["testutils"] }
+carbon-token = { path = "../contracts/carbon-token", features = ["testutils"] }
+marketplace = { path = "../contracts/marketplace", features = ["testutils"] }
+escrow = { path = "../contracts/escrow", features = ["testutils"] }
+verification-records = { path = "../contracts/verification-records", features = ["testutils"] }
+audit-log = { path = "../contracts/audit-log", features = ["testutils"] }
+governance = { path = "../contracts/governance", features = ["testutils"] }
+common = { path = "../common" }

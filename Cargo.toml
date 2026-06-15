@@ -8,4 +8,5 @@ members = [
     "contracts/verification-records",
     "contracts/audit-log",
     "contracts/governance",
+    "tests",
 ]

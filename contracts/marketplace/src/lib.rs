@@ -177,8 +177,9 @@ mod tests {
         let issuer = Address::generate(&env);
         let seller = Address::generate(&env);
         let buyer = Address::generate(&env);
+        let verification_records = Address::generate(&env);
 
-        token_client.initialize(&issuer);
+        token_client.initialize(&issuer, &verification_records);
 
         let native_asset = env.register_stellar_asset_contract(issuer.clone());
         let sac = StellarAssetClient::new(&env, &native_asset);

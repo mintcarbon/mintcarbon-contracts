@@ -126,8 +126,9 @@ mod tests {
         let marketplace = Address::generate(&env);
         let seller = Address::generate(&env);
         let buyer = Address::generate(&env);
+        let verification_records = Address::generate(&env);
 
-        token_client.initialize(&marketplace);
+        token_client.initialize(&marketplace, &verification_records);
 
         env.mock_all_auths_allowing_non_root_auth();
 
