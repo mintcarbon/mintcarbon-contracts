@@ -48,8 +48,7 @@ impl Marketplace {
         seller.require_auth();
 
         let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
         let balance = token_client.balance(&seller, &token_id);
         if balance < quantity {
             panic!("insufficient balance");
@@ -73,10 +72,8 @@ impl Marketplace {
         env.storage().persistent().set(&counter, &entry);
 
         let topics = (Symbol::new(&env, "listing_created"),);
-        env.events().publish(
-            topics,
-            (counter, seller, token_id, quantity, price),
-        );
+        env.events()
+            .publish(topics, (counter, seller, token_id, quantity, price));
 
         counter
     }
@@ -93,8 +90,7 @@ impl Marketplace {
         env.storage().persistent().remove(&listing_id);
 
         let topics = (Symbol::new(&env, "listing_cancelled"),);
-        env.events()
-            .publish(topics, (listing_id, entry.seller));
+        env.events().publish(topics, (listing_id, entry.seller));
     }
 
     pub fn place_order(env: Env, buyer: Address, listing_id: u32, quantity: i128) {
@@ -104,8 +100,7 @@ impl Marketplace {
 
         buyer.require_auth();
 
-        let mut entry: ListingEntry =
-            env.storage().persistent().get(&listing_id).unwrap();
+        let mut entry: ListingEntry = env.storage().persistent().get(&listing_id).unwrap();
 
         let available = entry.quantity - entry.filled;
         if quantity > available {
@@ -132,13 +127,7 @@ impl Marketplace {
         let topics = (Symbol::new(&env, "order_matched"),);
         env.events().publish(
             topics,
-            (
-                listing_id,
-                buyer,
-                quantity,
-                total_price,
-                entry.seller,
-            ),
+            (listing_id, buyer, quantity, total_price, entry.seller),
         );
     }
 
@@ -165,8 +154,7 @@ mod tests {
         let env = Env::default();
 
         let token_id = env.register_contract(None, carbon_token::CarbonCreditToken);
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
 
         let escrow_id = env.register_contract(None, escrow::Escrow);
         let escrow_client = escrow::EscrowClient::new(&env, &escrow_id);
@@ -228,12 +216,7 @@ mod tests {
         let (env, marketplace, _token_id, _native, _issuer, _seller, _buyer) = setup();
 
         let token_id = String::from_str(&env, "project-001");
-        let result = marketplace.try_create_listing(
-            &_seller,
-            &token_id,
-            &999_999,
-            &10_000_000,
-        );
+        let result = marketplace.try_create_listing(&_seller, &token_id, &999_999, &10_000_000);
         assert!(result.is_err());
     }
 
@@ -257,8 +240,7 @@ mod tests {
 
         marketplace.place_order(&buyer, &1, &100);
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &_token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &_token_id);
         let buyer_bal = token_client.balance(&buyer, &token_id);
         assert_eq!(buyer_bal, 100);
 
@@ -277,8 +259,7 @@ mod tests {
 
         marketplace.place_order(&buyer, &1, &40);
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &_token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &_token_id);
         let buyer_bal = token_client.balance(&buyer, &token_id);
         assert_eq!(buyer_bal, 40);
 

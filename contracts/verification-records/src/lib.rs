@@ -1,5 +1,7 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, String, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, Env, String, Symbol,
+};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -28,7 +30,11 @@ impl VerificationRecords {
     }
 
     pub fn create_record(env: Env, registry: String, cert_id: String, project_id: String) {
-        let issuer: Address = env.storage().instance().get(&ISSUER_KEY).expect("not initialized");
+        let issuer: Address = env
+            .storage()
+            .instance()
+            .get(&ISSUER_KEY)
+            .expect("not initialized");
         issuer.require_auth();
 
         let key = (symbol_short!("record"), project_id.clone());
@@ -53,24 +59,33 @@ impl VerificationRecords {
     }
 
     pub fn suspend(env: Env, project_id: String) {
-        let admin: Address = env.storage().instance().get(&ADMIN_KEY).expect("not initialized");
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .expect("not initialized");
         admin.require_auth();
 
         let key = (symbol_short!("record"), project_id.clone());
-        let mut record: Record = env.storage().persistent().get(&key).expect("record not found");
+        let mut record: Record = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .expect("record not found");
 
         record.suspended = true;
         env.storage().persistent().set(&key, &record);
 
-        env.events().publish(
-            (symbol_short!("cert_rev"), project_id),
-            (),
-        );
+        env.events()
+            .publish((symbol_short!("cert_rev"), project_id), ());
     }
 
     pub fn get_record(env: Env, project_id: String) -> Record {
         let key = (symbol_short!("record"), project_id);
-        env.storage().persistent().get(&key).expect("record not found")
+        env.storage()
+            .persistent()
+            .get(&key)
+            .expect("record not found")
     }
 
     pub fn is_suspended(env: Env, project_id: String) -> bool {

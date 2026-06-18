@@ -1,6 +1,8 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, String, Symbol, Bytes, BytesN};
 use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, String, Symbol,
+};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -27,15 +29,23 @@ impl AuditLog {
     }
 
     pub fn append(env: Env, data: String) -> u32 {
-        let admin: Address = env.storage().instance().get(&ADMIN_KEY).expect("not initialized");
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .expect("not initialized");
         admin.require_auth();
 
         let count: u32 = env.storage().instance().get(&ENTRY_COUNT).unwrap_or(0);
-        
+
         let prev_hash = if count == 0 {
             BytesN::from_array(&env, &[0u8; 32])
         } else {
-            let prev_entry: AuditEntry = env.storage().persistent().get(&(symbol_short!("entry"), count - 1)).unwrap();
+            let prev_entry: AuditEntry = env
+                .storage()
+                .persistent()
+                .get(&(symbol_short!("entry"), count - 1))
+                .unwrap();
             prev_entry.entry_hash
         };
 
@@ -45,7 +55,7 @@ impl AuditLog {
         hash_data.append(&Bytes::from_array(&env, &index_bytes));
         hash_data.append(&data.clone().to_xdr(&env));
         hash_data.append(&prev_hash.clone().into());
-        
+
         let entry_hash = env.crypto().sha256(&hash_data);
 
         let entry = AuditEntry {
@@ -62,13 +72,17 @@ impl AuditLog {
         env.storage().persistent().set(&key, &entry);
         env.storage().instance().set(&ENTRY_COUNT, &(count + 1));
 
-        env.events().publish((symbol_short!("audit"), count), entry_hash);
+        env.events()
+            .publish((symbol_short!("audit"), count), entry_hash);
 
         count
     }
 
     pub fn get_entry(env: Env, index: u32) -> AuditEntry {
-        env.storage().persistent().get(&(symbol_short!("entry"), index)).expect("entry not found")
+        env.storage()
+            .persistent()
+            .get(&(symbol_short!("entry"), index))
+            .expect("entry not found")
     }
 
     pub fn get_count(env: Env) -> u32 {
@@ -80,7 +94,11 @@ impl AuditLog {
         if count == 0 {
             BytesN::from_array(&env, &[0u8; 32])
         } else {
-            let last_entry: AuditEntry = env.storage().persistent().get(&(symbol_short!("entry"), count - 1)).unwrap();
+            let last_entry: AuditEntry = env
+                .storage()
+                .persistent()
+                .get(&(symbol_short!("entry"), count - 1))
+                .unwrap();
             last_entry.entry_hash
         }
     }
@@ -92,21 +110,29 @@ impl AuditLog {
         }
 
         for i in from..=to {
-            let entry: AuditEntry = env.storage().persistent().get(&(symbol_short!("entry"), i)).expect("entry not found");
-            
+            let entry: AuditEntry = env
+                .storage()
+                .persistent()
+                .get(&(symbol_short!("entry"), i))
+                .expect("entry not found");
+
             let mut hash_data = Bytes::new(&env);
             let index_bytes: [u8; 4] = i.to_be_bytes();
             hash_data.append(&Bytes::from_array(&env, &index_bytes));
             hash_data.append(&entry.data.to_xdr(&env));
             hash_data.append(&entry.prev_hash.clone().into());
-            
+
             let computed_hash: BytesN<32> = env.crypto().sha256(&hash_data).into();
             if computed_hash != entry.entry_hash {
                 return false;
             }
 
             if i > from {
-                let prev_entry: AuditEntry = env.storage().persistent().get(&(symbol_short!("entry"), i - 1)).expect("prev entry not found");
+                let prev_entry: AuditEntry = env
+                    .storage()
+                    .persistent()
+                    .get(&(symbol_short!("entry"), i - 1))
+                    .expect("prev entry not found");
                 if entry.prev_hash != prev_entry.entry_hash {
                     return false;
                 }
@@ -147,7 +173,7 @@ mod tests {
 
         let entry1 = client.get_entry(&1);
         assert_eq!(entry1.data, String::from_str(&env, "event 2"));
-        
+
         let root = client.get_root();
         let entry2 = client.get_entry(&2);
         assert_eq!(root, entry2.entry_hash);

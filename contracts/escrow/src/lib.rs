@@ -32,9 +32,13 @@ impl Escrow {
         }
 
         let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
-        token_client.transfer(&seller, &env.current_contract_address(), &token_id, &quantity);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
+        token_client.transfer(
+            &seller,
+            &env.current_contract_address(),
+            &token_id,
+            &quantity,
+        );
 
         let entry = LockedEntry {
             seller,
@@ -52,8 +56,7 @@ impl Escrow {
 
         if entry.quantity > 0 {
             let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-            let token_client =
-                carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
+            let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
             token_client.transfer(
                 &env.current_contract_address(),
                 &entry.seller,
@@ -80,8 +83,7 @@ impl Escrow {
         }
 
         let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
         token_client.transfer(
             &env.current_contract_address(),
             &buyer,
@@ -120,8 +122,7 @@ mod tests {
         let escrow_client = EscrowClient::new(&env, &escrow_id);
 
         let token_id = env.register_contract(None, carbon_token::CarbonCreditToken);
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
 
         let marketplace = Address::generate(&env);
         let seller = Address::generate(&env);
@@ -148,8 +149,7 @@ mod tests {
 
         let project_id = String::from_str(&env, "project-001");
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
         escrow.lock(&1, &seller, &project_id, &400);
 
         let locked = escrow.get_locked(&1).unwrap();
@@ -167,8 +167,7 @@ mod tests {
 
         let project_id = String::from_str(&env, "project-001");
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
         escrow.lock(&1, &seller, &project_id, &400);
 
         escrow.settle(&1, &buyer, &150);
@@ -191,8 +190,7 @@ mod tests {
 
         let project_id = String::from_str(&env, "project-001");
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
         escrow.lock(&1, &seller, &project_id, &400);
         escrow.release(&1);
 
@@ -208,8 +206,7 @@ mod tests {
 
         let project_id = String::from_str(&env, "project-001");
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
         escrow.lock(&1, &seller, &project_id, &400);
         escrow.settle(&1, &buyer, &150);
 
@@ -227,8 +224,7 @@ mod tests {
 
         let project_id = String::from_str(&env, "project-001");
 
-        let token_client =
-            carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
+        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
         escrow.lock(&1, &seller, &project_id, &400);
         escrow.settle(&1, &buyer, &400);
 

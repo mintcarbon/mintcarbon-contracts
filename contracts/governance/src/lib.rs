@@ -1,5 +1,8 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, String, Symbol, Vec, BytesN, IntoVal};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, IntoVal, String,
+    Symbol, Vec,
+};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -34,7 +37,11 @@ impl Governance {
     }
 
     pub fn propose_upgrade(env: Env, proposer: Address, new_impl: BytesN<32>) -> u32 {
-        let admins: Vec<Address> = env.storage().instance().get(&ADMINS).expect("not initialized");
+        let admins: Vec<Address> = env
+            .storage()
+            .instance()
+            .get(&ADMINS)
+            .expect("not initialized");
         if !admins.contains(&proposer) {
             panic!("not an admin");
         }
@@ -42,7 +49,7 @@ impl Governance {
 
         let count: u32 = env.storage().instance().get(&PROPOSAL_COUNT).unwrap_or(0);
         let timelock: u64 = env.storage().instance().get(&TIMELOCK).unwrap_or(172800);
-        
+
         let mut approvals = Vec::new(&env);
         approvals.push_back(proposer.clone());
 
@@ -53,23 +60,34 @@ impl Governance {
             executed: false,
         };
 
-        env.storage().persistent().set(&(symbol_short!("prop"), count), &proposal);
+        env.storage()
+            .persistent()
+            .set(&(symbol_short!("prop"), count), &proposal);
         env.storage().instance().set(&PROPOSAL_COUNT, &(count + 1));
 
-        env.events().publish((symbol_short!("upg_prop"), count), new_impl);
+        env.events()
+            .publish((symbol_short!("upg_prop"), count), new_impl);
 
         count
     }
 
     pub fn approve(env: Env, admin: Address, proposal_id: u32) {
-        let admins: Vec<Address> = env.storage().instance().get(&ADMINS).expect("not initialized");
+        let admins: Vec<Address> = env
+            .storage()
+            .instance()
+            .get(&ADMINS)
+            .expect("not initialized");
         if !admins.contains(&admin) {
             panic!("not an admin");
         }
         admin.require_auth();
 
         let key = (symbol_short!("prop"), proposal_id);
-        let mut proposal: Proposal = env.storage().persistent().get(&key).expect("proposal not found");
+        let mut proposal: Proposal = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .expect("proposal not found");
 
         if proposal.executed {
             panic!("already executed");
@@ -85,13 +103,18 @@ impl Governance {
 
     pub fn execute_upgrade(env: Env, proposal_id: u32) {
         let key = (symbol_short!("prop"), proposal_id);
-        let mut proposal: Proposal = env.storage().persistent().get(&key).expect("proposal not found");
+        let mut proposal: Proposal = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .expect("proposal not found");
 
         if proposal.executed {
             panic!("already executed");
         }
 
-        if proposal.approvals.len() < 2 { // Requirement: min 2 approvals to execute
+        if proposal.approvals.len() < 2 {
+            // Requirement: min 2 approvals to execute
             panic!("insufficient approvals");
         }
 
@@ -99,19 +122,25 @@ impl Governance {
             panic!("timelock not expired");
         }
 
-        env.deployer().update_current_contract_wasm(proposal.new_impl.clone());
-        
+        env.deployer()
+            .update_current_contract_wasm(proposal.new_impl.clone());
+
         proposal.executed = true;
         env.storage().persistent().set(&key, &proposal);
 
-        env.events().publish((symbol_short!("upg_exec"), proposal_id), proposal.new_impl);
+        env.events()
+            .publish((symbol_short!("upg_exec"), proposal_id), proposal.new_impl);
     }
 
     pub fn object(env: Env, objector: Address, _proposal_id: u32, reason: String) {
         objector.require_auth();
-        
-        let audit_log_addr: Address = env.storage().instance().get(&AUDIT_LOG).expect("not initialized");
-        
+
+        let audit_log_addr: Address = env
+            .storage()
+            .instance()
+            .get(&AUDIT_LOG)
+            .expect("not initialized");
+
         // Log the objection to AuditLog
         env.invoke_contract::<u32>(
             &audit_log_addr,
@@ -124,7 +153,7 @@ impl Governance {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Address, Env, Vec, BytesN};
+    use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
 
     fn setup() -> (Env, GovernanceClient<'static>, Vec<Address>, Address) {
         let env = Env::default();
