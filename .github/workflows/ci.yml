@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,7 +19,7 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
           components: rustfmt, clippy
-      
+
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -38,7 +38,13 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Build contracts
-        run: cargo build --target wasm32-unknown-unknown --release
+        run: |
+          cargo build --target wasm32-unknown-unknown --release -p carbon-token
+          cargo build --target wasm32-unknown-unknown --release -p marketplace
+          cargo build --target wasm32-unknown-unknown --release -p escrow
+          cargo build --target wasm32-unknown-unknown --release -p verification-records
+          cargo build --target wasm32-unknown-unknown --release -p audit-log
+          cargo build --target wasm32-unknown-unknown --release -p governance
 
       - name: Run tests
         run: cargo test
