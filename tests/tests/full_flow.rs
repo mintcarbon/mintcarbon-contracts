@@ -4,7 +4,7 @@ use escrow::EscrowClient;
 use governance::GovernanceClient;
 use marketplace::MarketplaceClient;
 use soroban_sdk::token::StellarAssetClient;
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, IntoVal, String, Vec};
+use soroban_sdk::{testutils::Address as _, Address, Env, String, Vec};
 use verification_records::VerificationRecordsClient;
 
 #[test]
@@ -41,8 +41,8 @@ fn test_full_flow() {
     audit_log.initialize(&admin);
     escrow.initialize(&marketplace_id, &carbon_token_id);
 
-    let native_asset = env.register_stellar_asset_contract(issuer.clone());
-    marketplace.initialize(&escrow_id, &carbon_token_id, &native_asset);
+    let native_asset = env.register_stellar_asset_contract_v2(issuer.clone());
+    marketplace.initialize(&escrow_id, &carbon_token_id, &native_asset.address());
 
     let mut admins = Vec::new(&env);
     admins.push_back(admin.clone());
@@ -70,7 +70,7 @@ fn test_full_flow() {
     let listing_id = marketplace.create_listing(&seller, &project_id, &100, &price);
 
     // e. Buyer gets XLM
-    let sac = StellarAssetClient::new(&env, &native_asset);
+    let sac = StellarAssetClient::new(&env, &native_asset.address());
     sac.mint(&buyer, &2_000_000_000);
 
     // f. Buyer places order

@@ -131,7 +131,7 @@ mod tests {
         assert_eq!(record.registry, registry);
         assert_eq!(record.cert_id, cert_id);
         assert_eq!(record.project_id, project_id);
-        assert_eq!(record.suspended, false);
+        assert!(!record.suspended);
     }
 
     #[test]
@@ -144,10 +144,10 @@ mod tests {
 
         env.mock_all_auths();
         client.create_record(&registry, &cert_id, &project_id);
-        assert_eq!(client.is_suspended(&project_id), false);
+        assert!(!client.is_suspended(&project_id));
 
         client.suspend(&project_id);
-        assert_eq!(client.is_suspended(&project_id), true);
+        assert!(client.is_suspended(&project_id));
     }
 
     #[test]

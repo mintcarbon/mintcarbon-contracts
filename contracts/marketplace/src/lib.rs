@@ -169,13 +169,13 @@ mod tests {
 
         token_client.initialize(&issuer, &verification_records);
 
-        let native_asset = env.register_stellar_asset_contract(issuer.clone());
-        let sac = StellarAssetClient::new(&env, &native_asset);
+        let native_asset = env.register_stellar_asset_contract_v2(issuer.clone());
+        let sac = StellarAssetClient::new(&env, &native_asset.address());
 
         env.mock_all_auths_allowing_non_root_auth();
 
         escrow_client.initialize(&marketplace_id, &token_id);
-        marketplace_client.initialize(&escrow_id, &token_id, &native_asset);
+        marketplace_client.initialize(&escrow_id, &token_id, &native_asset.address());
 
         let project_id = String::from_str(&env, "project-001");
         let verification_ref = String::from_str(&env, "verra-001");
@@ -188,7 +188,7 @@ mod tests {
             env,
             marketplace_client,
             token_id,
-            native_asset,
+            native_asset.address(),
             issuer,
             seller,
             buyer,
