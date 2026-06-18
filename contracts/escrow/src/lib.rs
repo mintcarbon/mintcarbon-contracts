@@ -1,6 +1,6 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Address, Env, String, Symbol,
+    contract, contractimpl, contracttype, symbol_short, Address, Env, IntoVal, String, Symbol,
 };
 
 #[contracttype]
@@ -32,12 +32,16 @@ impl Escrow {
         }
 
         let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
-        token_client.transfer(
-            &seller,
-            &env.current_contract_address(),
-            &token_id,
-            &quantity,
+        let _: () = env.invoke_contract(
+            &token_address,
+            &symbol_short!("transfer"),
+            (
+                seller.clone(),
+                env.current_contract_address(),
+                token_id.clone(),
+                quantity,
+            )
+            .into_val(&env),
         );
 
         let entry = LockedEntry {
@@ -56,12 +60,16 @@ impl Escrow {
 
         if entry.quantity > 0 {
             let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-            let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
-            token_client.transfer(
-                &env.current_contract_address(),
-                &entry.seller,
-                &entry.token_id,
-                &entry.quantity,
+            let _: () = env.invoke_contract(
+                &token_address,
+                &symbol_short!("transfer"),
+                (
+                    env.current_contract_address(),
+                    entry.seller.clone(),
+                    entry.token_id.clone(),
+                    entry.quantity,
+                )
+                .into_val(&env),
             );
         }
 
@@ -83,12 +91,16 @@ impl Escrow {
         }
 
         let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
-        token_client.transfer(
-            &env.current_contract_address(),
-            &buyer,
-            &entry.token_id,
-            &quantity,
+        let _: () = env.invoke_contract(
+            &token_address,
+            &symbol_short!("transfer"),
+            (
+                env.current_contract_address(),
+                buyer.clone(),
+                entry.token_id.clone(),
+                quantity,
+            )
+            .into_val(&env),
         );
 
         entry.quantity -= quantity;
@@ -121,15 +133,20 @@ mod tests {
         let escrow_id = env.register_contract(None, Escrow);
         let escrow_client = EscrowClient::new(&env, &escrow_id);
 
+        let ver_rec_id = env.register_contract(None, verification_records::VerificationRecords);
+        let ver_rec_client = verification_records::VerificationRecordsClient::new(&env, &ver_rec_id);
+
         let token_id = env.register_contract(None, carbon_token::CarbonCreditToken);
         let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
 
         let marketplace = Address::generate(&env);
         let seller = Address::generate(&env);
         let buyer = Address::generate(&env);
-        let verification_records = Address::generate(&env);
 
-        token_client.initialize(&marketplace, &verification_records);
+        let verification_records_admin = Address::generate(&env);
+        ver_rec_client.initialize(&marketplace, &verification_records_admin);
+
+        token_client.initialize(&marketplace, &ver_rec_id);
 
         env.mock_all_auths_allowing_non_root_auth();
 

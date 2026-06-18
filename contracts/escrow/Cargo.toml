@@ -10,7 +10,11 @@ doctest = false
 [dependencies]
 soroban-sdk = { version = "21.0.0" }
 common = { path = "../../common" }
-carbon-token = { path = "../carbon-token" }
+
+[dev-dependencies]
+soroban-sdk = { version = "21.0.0", features = ["testutils"] }
+carbon-token = { path = "../carbon-token", features = ["testutils"] }
+verification-records = { path = "../verification-records", features = ["testutils"] }
 
 [features]
-testutils = ["soroban-sdk/testutils", "carbon-token/testutils"]
+testutils = ["soroban-sdk/testutils"]

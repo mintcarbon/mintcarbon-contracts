@@ -428,6 +428,7 @@ dependencies = [
  "carbon-token",
  "common",
  "soroban-sdk",
+ "verification-records",
 ]
 
 [[package]]
@@ -718,6 +719,7 @@ dependencies = [
  "common",
  "escrow",
  "soroban-sdk",
+ "verification-records",
 ]
 
 [[package]]

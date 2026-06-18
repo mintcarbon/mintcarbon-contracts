@@ -1,7 +1,7 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, token::TokenClient, Address, Env, String,
-    Symbol,
+    contract, contractimpl, contracttype, symbol_short, token::TokenClient, Address, Env, IntoVal,
+    String, Symbol,
 };
 
 #[contracttype]
@@ -48,8 +48,11 @@ impl Marketplace {
         seller.require_auth();
 
         let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
-        let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_address);
-        let balance = token_client.balance(&seller, &token_id);
+        let balance: i128 = env.invoke_contract(
+            &token_address,
+            &symbol_short!("balance"),
+            (seller.clone(), token_id.clone()).into_val(&env),
+        );
         if balance < quantity {
             panic!("insufficient balance");
         }
@@ -59,8 +62,11 @@ impl Marketplace {
         counter += 1;
         env.storage().instance().set(&COUNTER, &counter);
 
-        let escrow_client = escrow::EscrowClient::new(&env, &escrow_address);
-        escrow_client.lock(&counter, &seller, &token_id, &quantity);
+        let _: () = env.invoke_contract(
+            &escrow_address,
+            &symbol_short!("lock"),
+            (counter, seller.clone(), token_id.clone(), quantity).into_val(&env),
+        );
 
         let entry = ListingEntry {
             seller: seller.clone(),
@@ -84,8 +90,11 @@ impl Marketplace {
         entry.seller.require_auth();
 
         let escrow_address: Address = env.storage().instance().get(&ESROW).unwrap();
-        let escrow_client = escrow::EscrowClient::new(&env, &escrow_address);
-        escrow_client.release(&listing_id);
+        let _: () = env.invoke_contract(
+            &escrow_address,
+            &symbol_short!("release"),
+            (listing_id,).into_val(&env),
+        );
 
         env.storage().persistent().remove(&listing_id);
 
@@ -114,8 +123,11 @@ impl Marketplace {
         native_client.transfer(&buyer, &entry.seller, &total_price);
 
         let escrow_address: Address = env.storage().instance().get(&ESROW).unwrap();
-        let escrow_client = escrow::EscrowClient::new(&env, &escrow_address);
-        escrow_client.settle(&listing_id, &buyer, &quantity);
+        let _: () = env.invoke_contract(
+            &escrow_address,
+            &symbol_short!("settle"),
+            (listing_id, buyer.clone(), quantity).into_val(&env),
+        );
 
         entry.filled += quantity;
         if entry.filled == entry.quantity {
@@ -153,6 +165,9 @@ mod tests {
     ) {
         let env = Env::default();
 
+        let ver_rec_id = env.register_contract(None, verification_records::VerificationRecords);
+        let ver_rec_client = verification_records::VerificationRecordsClient::new(&env, &ver_rec_id);
+
         let token_id = env.register_contract(None, carbon_token::CarbonCreditToken);
         let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
 
@@ -165,9 +180,10 @@ mod tests {
         let issuer = Address::generate(&env);
         let seller = Address::generate(&env);
         let buyer = Address::generate(&env);
-        let verification_records = Address::generate(&env);
+        let ver_rec_admin = Address::generate(&env);
 
-        token_client.initialize(&issuer, &verification_records);
+        ver_rec_client.initialize(&issuer, &ver_rec_admin);
+        token_client.initialize(&issuer, &ver_rec_id);
 
         let native_asset = env.register_stellar_asset_contract_v2(issuer.clone());
         let sac = StellarAssetClient::new(&env, &native_asset.address());
