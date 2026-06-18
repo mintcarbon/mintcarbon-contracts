@@ -166,7 +166,8 @@ mod tests {
         let env = Env::default();
 
         let ver_rec_id = env.register_contract(None, verification_records::VerificationRecords);
-        let ver_rec_client = verification_records::VerificationRecordsClient::new(&env, &ver_rec_id);
+        let ver_rec_client =
+            verification_records::VerificationRecordsClient::new(&env, &ver_rec_id);
 
         let token_id = env.register_contract(None, carbon_token::CarbonCreditToken);
         let token_client = carbon_token::CarbonCreditTokenClient::new(&env, &token_id);
