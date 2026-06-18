@@ -13,6 +13,7 @@ This repository contains all on-chain Soroban smart contracts for the mintcarbon
 A multi-token contract (analogous to ERC-1155) that manages carbon credit tokens on-chain.
 
 **Capabilities:**
+
 - Mint tokens against a verified Project ID with a 1:1 correspondence to Registry-verified Credits
 - Enforce one-to-one backing — prevents over-issuance
 - Transfer tokens between Wallets
@@ -24,6 +25,7 @@ A multi-token contract (analogous to ERC-1155) that manages carbon credit tokens
 Handles listing creation, order matching, and atomic settlement.
 
 **Capabilities:**
+
 - Create listings with Token ID, quantity, and asking price
 - Validate Seller balance before listing
 - Lock listed tokens in escrow
@@ -36,6 +38,7 @@ Handles listing creation, order matching, and atomic settlement.
 Holds tokens securely during active listings.
 
 **Capabilities:**
+
 - Lock tokens from Seller's wallet on listing creation
 - Release tokens back to Seller on cancellation
 - Transfer tokens to Buyer on settlement
@@ -46,6 +49,7 @@ Holds tokens securely during active listings.
 On-chain registry of verified carbon credit projects linking tokens to real-world certificates.
 
 **Capabilities:**
+
 - Create immutable Verification_Records linking Registry name, certificate ID, Project ID, and timestamp
 - Suspend tokens associated with a revoked certificate
 - Query project metadata by Token ID
@@ -55,6 +59,7 @@ On-chain registry of verified carbon credit projects linking tokens to real-worl
 Append-only, tamper-evident log of all state-changing events.
 
 **Capabilities:**
+
 - Append-only writes — rejects modifications and deletions of existing entries
 - Merkle-tree hash chain for cryptographic integrity verification
 - Records: registrations, minting, listings, orders, settlements, retirements, certificate revocations, upgrade objections
@@ -64,6 +69,7 @@ Append-only, tamper-evident log of all state-changing events.
 Time-locked proxy upgrade system for smart contract administration.
 
 **Capabilities:**
+
 - Minimum 48-hour delay between upgrade proposal and execution
 - Multi-signature authorization (minimum 3 designated administrators)
 - Publish proposed changes and execution timestamp on-chain
@@ -128,28 +134,38 @@ contracts/
 
 ## Prerequisites
 
-- Rust 1.77+
-- Soroban CLI (`cargo install soroban-cli`)
+- [Rust](https://www.rust-lang.org/tools/install) 1.77+
+- [Soroban CLI](https://soroban.stellar.org/docs/getting-started/setup#install-the-soroban-cli)
+- Target `wasm32-unknown-unknown`: `rustup target add wasm32-unknown-unknown`
 - Stellar testnet account with friendbot-funding
 
 ## Getting Started
 
 ```bash
+# Clone the repository
+git clone https://github.com/mintcarbon/mintcarbon-contracts.git
+cd mintcarbon-contracts
+
 # Build all contracts
-cargo build --workspace
+cargo build --target wasm32-unknown-unknown --release
 
 # Run unit tests
 cargo test
 
 # Run integration tests
-cargo test --test '*' --features testutils
+cargo test --package tests
 
 # Deploy contracts to testnet
 ./scripts/deploy.sh --network testnet
-
-# Verify deployment
-./scripts/verify.sh --network testnet
 ```
+
+## Community and Contributing
+
+We welcome contributions from the community! Please see the following documents for more information:
+
+- [Contributing Guidelines](CONTRIBUTING.md) - How to get started with development.
+- [Code of Conduct](CODE_OF_CONDUCT.md) - Our standards for a welcoming environment.
+- [Security Policy](SECURITY.md) - How to report security vulnerabilities.
 
 ## Key Design Decisions
 
@@ -163,27 +179,27 @@ cargo test --test '*' --features testutils
 
 ## Event Reference
 
-| Event | Emitter | Payload |
-|-------|---------|---------|
-| `mint` | CarbonCreditToken | token_id, quantity, project_id, verification_record_ref, timestamp |
-| `retire` | CarbonCreditToken | token_id, quantity, wallet, reason, timestamp |
-| `listing_created` | Marketplace | seller, token_id, quantity, price, listing_id, timestamp |
-| `order_matched` | Marketplace | buyer, seller, token_id, quantity, unit_price, total, tx_hash |
-| `listing_cancelled` | Marketplace | seller, listing_id, timestamp |
-| `certificate_revoked` | VerificationRecords | registry, cert_id, project_id, timestamp |
-| `upgrade_proposed` | Governance | new_impl, scheduled_time, proposer |
-| `upgrade_executed` | Governance | new_impl, timestamp |
+| Event                 | Emitter             | Payload                                                            |
+| --------------------- | ------------------- | ------------------------------------------------------------------ |
+| `mint`                | CarbonCreditToken   | token_id, quantity, project_id, verification_record_ref, timestamp |
+| `retire`              | CarbonCreditToken   | token_id, quantity, wallet, reason, timestamp                      |
+| `listing_created`     | Marketplace         | seller, token_id, quantity, price, listing_id, timestamp           |
+| `order_matched`       | Marketplace         | buyer, seller, token_id, quantity, unit_price, total, tx_hash      |
+| `listing_cancelled`   | Marketplace         | seller, listing_id, timestamp                                      |
+| `certificate_revoked` | VerificationRecords | registry, cert_id, project_id, timestamp                           |
+| `upgrade_proposed`    | Governance          | new_impl, scheduled_time, proposer                                 |
+| `upgrade_executed`    | Governance          | new_impl, timestamp                                                |
 
 ## Configuration
 
 Configuration is environment-specific via Soroban CLI profiles:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NETWORK` | Stellar network target | `testnet` |
-| `ADMIN_KEYS` | Multi-sig admin public keys | — |
-| `TIMELOCK_SECS` | Governance timelock duration | `172800` (48h) |
-| `MIN_SIGS` | Required signatures for upgrade | `3` |
+| Variable        | Description                     | Default        |
+| --------------- | ------------------------------- | -------------- |
+| `NETWORK`       | Stellar network target          | `testnet`      |
+| `ADMIN_KEYS`    | Multi-sig admin public keys     | —              |
+| `TIMELOCK_SECS` | Governance timelock duration    | `172800` (48h) |
+| `MIN_SIGS`      | Required signatures for upgrade | `3`            |
 
 ## Security Considerations
 
@@ -193,10 +209,6 @@ Configuration is environment-specific via Soroban CLI profiles:
 - Reentrancy protection via checks-effects-interactions pattern
 - Escrow contract has no publicly callable withdraw — only Marketplace can trigger releases
 
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
 ## License
 
-[License MIT]
+This project is licensed under the [MIT License](LICENSE).
