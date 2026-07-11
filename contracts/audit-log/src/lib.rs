@@ -180,12 +180,31 @@ mod tests {
     }
 
     #[test]
-    fn test_chain_integrity_failure() {
+    fn test_chain_valid_range() {
         let (env, client, _admin) = setup();
         env.mock_all_auths();
         client.append(&String::from_str(&env, "event 1"));
         client.append(&String::from_str(&env, "event 2"));
 
         assert!(client.verify_chain(&0, &1));
+    }
+
+    #[test]
+    fn test_verify_chain_invalid_range_from_greater_than_to() {
+        let (env, client, _admin) = setup();
+        env.mock_all_auths();
+        client.append(&String::from_str(&env, "event 1"));
+        client.append(&String::from_str(&env, "event 2"));
+
+        assert!(!client.verify_chain(&1, &0));
+    }
+
+    #[test]
+    fn test_verify_chain_out_of_bounds() {
+        let (env, client, _admin) = setup();
+        env.mock_all_auths();
+        client.append(&String::from_str(&env, "event 1"));
+
+        assert!(!client.verify_chain(&0, &5));
     }
 }
