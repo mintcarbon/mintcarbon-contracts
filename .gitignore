@@ -1,4 +1,5 @@
 target/
+test_snapshots/
 
 # Environment files
 .env
@@ -14,3 +15,4 @@ Thumbs.db
 *.swp
 *.swo
 *~
+tests/test_snapshots
