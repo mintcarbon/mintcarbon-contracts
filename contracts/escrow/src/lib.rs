@@ -19,6 +19,9 @@ pub struct Escrow;
 #[contractimpl]
 impl Escrow {
     pub fn initialize(env: Env, admin: Address, token_address: Address) {
+        if env.storage().instance().has(&ADMIN) {
+            panic!("already initialized");
+        }
         env.storage().instance().set(&ADMIN, &admin);
         env.storage().instance().set(&TOKEN, &token_address);
     }

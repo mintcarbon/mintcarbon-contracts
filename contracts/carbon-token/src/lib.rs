@@ -11,6 +11,9 @@ pub struct CarbonCreditToken;
 #[contractimpl]
 impl CarbonCreditToken {
     pub fn initialize(env: Env, issuer: Address, verification_records: Address) {
+        if env.storage().instance().has(&ISSUER_KEY) {
+            panic!("already initialized");
+        }
         env.storage().instance().set(&ISSUER_KEY, &issuer);
         env.storage()
             .instance()

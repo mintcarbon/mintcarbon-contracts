@@ -29,6 +29,9 @@ impl Marketplace {
         token_address: Address,
         native_asset_address: Address,
     ) {
+        if env.storage().instance().has(&ESCROW) {
+            panic!("already initialized");
+        }
         env.storage().instance().set(&ESCROW, &escrow_address);
         env.storage().instance().set(&TOKEN, &token_address);
         env.storage().instance().set(&NATIVE, &native_asset_address);
