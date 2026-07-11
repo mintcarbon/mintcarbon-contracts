@@ -198,4 +198,61 @@ mod tests {
 
         client.execute_upgrade(&prop_id);
     }
+
+    #[test]
+    #[should_panic(expected = "not an admin")]
+    fn test_propose_by_non_admin() {
+        let (env, client, _admins, _audit_log) = setup();
+
+        let new_impl = BytesN::from_array(&env, &[1u8; 32]);
+        let non_admin = Address::generate(&env);
+
+        env.mock_all_auths();
+        client.propose_upgrade(&non_admin, &new_impl);
+    }
+
+    #[test]
+    #[should_panic(expected = "already approved")]
+    fn test_duplicate_approval_rejected() {
+        let (env, client, admins, _audit_log) = setup();
+
+        let new_impl = BytesN::from_array(&env, &[1u8; 32]);
+        let proposer = admins.get(0).unwrap();
+
+        env.mock_all_auths();
+        let prop_id = client.propose_upgrade(&proposer, &new_impl);
+
+        client.approve(&proposer, &prop_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "timelock not expired")]
+    fn test_execute_timelock_not_expired() {
+        let (env, client, admins, _audit_log) = setup();
+
+        let new_impl = BytesN::from_array(&env, &[1u8; 32]);
+        let proposer = admins.get(0).unwrap();
+
+        env.mock_all_auths();
+        let prop_id = client.propose_upgrade(&proposer, &new_impl);
+        client.approve(&admins.get(1).unwrap(), &prop_id);
+        client.approve(&admins.get(2).unwrap(), &prop_id);
+
+        client.execute_upgrade(&prop_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "not an admin")]
+    fn test_approve_by_non_admin() {
+        let (env, client, admins, _audit_log) = setup();
+
+        let new_impl = BytesN::from_array(&env, &[1u8; 32]);
+        let proposer = admins.get(0).unwrap();
+        let non_admin = Address::generate(&env);
+
+        env.mock_all_auths();
+        let prop_id = client.propose_upgrade(&proposer, &new_impl);
+
+        client.approve(&non_admin, &prop_id);
+    }
 }
