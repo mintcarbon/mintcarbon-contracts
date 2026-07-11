@@ -72,11 +72,6 @@ impl CarbonCreditToken {
             panic!("quantity must be positive");
         }
 
-        let retired_key = (Symbol::new(&env, "retired"), token_id.clone());
-        if env.storage().persistent().has(&retired_key) {
-            panic!("{}", Error::TokenRetired as u32);
-        }
-
         let from_key = (Symbol::new(&env, "balance"), from.clone(), token_id.clone());
         let from_balance: i128 = env.storage().persistent().get(&from_key).unwrap_or(0);
 
@@ -122,9 +117,6 @@ impl CarbonCreditToken {
         } else {
             env.storage().persistent().set(&bal_key, &new_balance);
         }
-
-        let retired_key = (Symbol::new(&env, "retired"), token_id.clone());
-        env.storage().persistent().set(&retired_key, &true);
 
         let timestamp = env.ledger().timestamp();
         let topics = (symbol_short!("retire"), token_id);
@@ -229,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn test_transfer_of_retired_rejected() {
+    fn test_transfer_after_retire_insufficient_balance() {
         let (env, client, issuer_addr, user) = setup();
 
         let project_id = String::from_str(&env, "project-001");
@@ -240,6 +232,9 @@ mod tests {
         client.mint(&project_id, &1000, &verification_ref);
         client.transfer(&issuer_addr, &user, &project_id, &500);
         client.retire(&user, &project_id, &500, &reason);
+
+        let user_bal = client.balance(&user, &project_id);
+        assert_eq!(user_bal, 0);
 
         let result = client.try_transfer(&user, &issuer_addr, &project_id, &100);
         assert!(result.is_err());
