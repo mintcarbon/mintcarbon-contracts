@@ -48,11 +48,16 @@ impl Escrow {
         );
 
         let entry = LockedEntry {
-            seller,
-            token_id,
+            seller: seller.clone(),
+            token_id: token_id.clone(),
             quantity,
         };
         env.storage().persistent().set(&listing_id, &entry);
+
+        env.events().publish(
+            (Symbol::new(&env, "escrow_locked"),),
+            (listing_id, seller, token_id, quantity),
+        );
     }
 
     pub fn release(env: Env, listing_id: u32) {
@@ -77,6 +82,11 @@ impl Escrow {
         }
 
         env.storage().persistent().remove(&listing_id);
+
+        env.events().publish(
+            (Symbol::new(&env, "escrow_released"),),
+            (listing_id, entry.seller, entry.token_id, entry.quantity),
+        );
     }
 
     pub fn settle(env: Env, listing_id: u32, buyer: Address, quantity: i128) {
@@ -112,6 +122,11 @@ impl Escrow {
         } else {
             env.storage().persistent().set(&listing_id, &entry);
         }
+
+        env.events().publish(
+            (Symbol::new(&env, "escrow_settled"),),
+            (listing_id, buyer, entry.token_id, quantity),
+        );
     }
 
     pub fn get_locked(env: Env, listing_id: u32) -> Option<LockedEntry> {
