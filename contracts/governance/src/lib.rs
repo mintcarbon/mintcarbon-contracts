@@ -113,8 +113,8 @@ impl Governance {
             panic!("already executed");
         }
 
-        if proposal.approvals.len() < 2 {
-            // Requirement: min 2 approvals to execute
+        if proposal.approvals.len() < 3 {
+            // Requirement: min 3 approvals (matches min 3 admins)
             panic!("insufficient approvals");
         }
 
@@ -182,6 +182,7 @@ mod tests {
         let prop_id = client.propose_upgrade(&proposer, &new_impl);
 
         client.approve(&admins.get(1).unwrap(), &prop_id);
+        client.approve(&admins.get(2).unwrap(), &prop_id);
     }
 
     #[test]
