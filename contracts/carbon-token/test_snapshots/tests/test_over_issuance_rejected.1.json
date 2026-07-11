@@ -701,7 +701,7 @@
             "data": {
               "vec": [
                 {
-                  "string": "caught panic '4' from contract function 'Symbol(mint)'"
+                  "string": "caught panic 'over-issuance: token already minted for this project' from contract function 'Symbol(mint)'"
                 },
                 {
                   "string": "project-001"

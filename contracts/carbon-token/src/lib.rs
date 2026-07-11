@@ -1,5 +1,4 @@
 #![no_std]
-use common::Error;
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, IntoVal, String, Symbol};
 
 const ISSUER_KEY: Symbol = symbol_short!("issuer");
@@ -44,7 +43,7 @@ impl CarbonCreditToken {
 
         let supply_key = (Symbol::new(&env, "supply"), project_id.clone());
         if env.storage().persistent().has(&supply_key) {
-            panic!("{}", Error::OverIssuance as u32);
+            panic!("over-issuance: token already minted for this project");
         }
 
         let backing_key = (Symbol::new(&env, "backing"), project_id.clone());
@@ -76,7 +75,7 @@ impl CarbonCreditToken {
         let from_balance: i128 = env.storage().persistent().get(&from_key).unwrap_or(0);
 
         if from_balance < quantity {
-            panic!("{}", Error::InsufficientBalance as u32);
+            panic!("insufficient balance");
         }
 
         let new_from = from_balance - quantity;
@@ -108,7 +107,7 @@ impl CarbonCreditToken {
         let balance: i128 = env.storage().persistent().get(&bal_key).unwrap_or(0);
 
         if balance < quantity {
-            panic!("{}", Error::InsufficientBalance as u32);
+            panic!("insufficient balance");
         }
 
         let new_balance = balance - quantity;
