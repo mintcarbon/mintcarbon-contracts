@@ -13,7 +13,7 @@ pub struct ListingEntry {
     pub filled: i128,
 }
 
-const ESROW: Symbol = symbol_short!("escrow");
+const ESCROW: Symbol = symbol_short!("escrow");
 const TOKEN: Symbol = symbol_short!("token");
 const NATIVE: Symbol = symbol_short!("native");
 const COUNTER: Symbol = symbol_short!("counter");
@@ -29,7 +29,7 @@ impl Marketplace {
         token_address: Address,
         native_asset_address: Address,
     ) {
-        env.storage().instance().set(&ESROW, &escrow_address);
+        env.storage().instance().set(&ESCROW, &escrow_address);
         env.storage().instance().set(&TOKEN, &token_address);
         env.storage().instance().set(&NATIVE, &native_asset_address);
     }
@@ -57,7 +57,7 @@ impl Marketplace {
             panic!("insufficient balance");
         }
 
-        let escrow_address: Address = env.storage().instance().get(&ESROW).unwrap();
+        let escrow_address: Address = env.storage().instance().get(&ESCROW).unwrap();
         let mut counter: u32 = env.storage().instance().get(&COUNTER).unwrap_or(0);
         counter += 1;
         env.storage().instance().set(&COUNTER, &counter);
@@ -89,7 +89,7 @@ impl Marketplace {
 
         entry.seller.require_auth();
 
-        let escrow_address: Address = env.storage().instance().get(&ESROW).unwrap();
+        let escrow_address: Address = env.storage().instance().get(&ESCROW).unwrap();
         let _: () = env.invoke_contract(
             &escrow_address,
             &symbol_short!("release"),
@@ -122,7 +122,7 @@ impl Marketplace {
         let native_client = TokenClient::new(&env, &native_address);
         native_client.transfer(&buyer, &entry.seller, &total_price);
 
-        let escrow_address: Address = env.storage().instance().get(&ESROW).unwrap();
+        let escrow_address: Address = env.storage().instance().get(&ESCROW).unwrap();
         let _: () = env.invoke_contract(
             &escrow_address,
             &symbol_short!("settle"),
