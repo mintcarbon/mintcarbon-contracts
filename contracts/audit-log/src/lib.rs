@@ -207,4 +207,39 @@ mod tests {
 
         assert!(!client.verify_chain(&0, &5));
     }
+
+    #[test]
+    fn test_empty_chain_verify_returns_false() {
+        let (_env, client, _admin) = setup();
+
+        assert!(!client.verify_chain(&0, &0));
+    }
+
+    #[test]
+    fn test_single_entry_verify() {
+        let (env, client, _admin) = setup();
+        env.mock_all_auths();
+        client.append(&String::from_str(&env, "solo event"));
+
+        assert!(client.verify_chain(&0, &0));
+    }
+
+    #[test]
+    fn test_get_root_empty() {
+        let (env, client, _admin) = setup();
+
+        let root = client.get_root();
+        assert_eq!(root, BytesN::from_array(&env, &[0u8; 32]));
+    }
+
+    #[test]
+    #[should_panic(expected = "not initialized")]
+    fn test_append_without_init() {
+        let env = Env::default();
+        let contract_id = env.register_contract(None, AuditLog);
+        let client = AuditLogClient::new(&env, &contract_id);
+
+        env.mock_all_auths();
+        client.append(&String::from_str(&env, "should fail"));
+    }
 }

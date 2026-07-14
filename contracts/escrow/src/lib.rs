@@ -282,4 +282,33 @@ mod tests {
         let result = escrow.try_lock(&1, &seller, &project_id, &100);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_settle_zero_quantity() {
+        let (env, escrow, _token_id, _marketplace, seller, buyer) = setup();
+
+        let project_id = String::from_str(&env, "project-001");
+        escrow.lock(&1, &seller, &project_id, &400);
+
+        let result = escrow.try_settle(&1, &buyer, &0);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_settle_exceeds_locked_quantity() {
+        let (env, escrow, _token_id, _marketplace, seller, buyer) = setup();
+
+        let project_id = String::from_str(&env, "project-001");
+        escrow.lock(&1, &seller, &project_id, &400);
+
+        let result = escrow.try_settle(&1, &buyer, &500);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_locked_nonexistent() {
+        let (_env, escrow, _token_id, _marketplace, _seller, _buyer) = setup();
+
+        assert!(escrow.get_locked(&999).is_none());
+    }
 }
