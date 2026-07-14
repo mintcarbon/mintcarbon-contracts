@@ -1,4 +1,5 @@
 #![no_std]
+use common::Error;
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, IntoVal, String, Symbol};
 
 const ISSUER_KEY: Symbol = symbol_short!("issuer");
@@ -9,17 +10,27 @@ pub struct CarbonCreditToken;
 
 #[contractimpl]
 impl CarbonCreditToken {
-    pub fn initialize(env: Env, issuer: Address, verification_records: Address) {
+    pub fn initialize(
+        env: Env,
+        issuer: Address,
+        verification_records: Address,
+    ) -> Result<(), Error> {
         if env.storage().instance().has(&ISSUER_KEY) {
-            panic!("already initialized");
+            return Err(Error::AlreadyInitialized);
         }
         env.storage().instance().set(&ISSUER_KEY, &issuer);
         env.storage()
             .instance()
             .set(&VERIFICATION_RECORDS_KEY, &verification_records);
+        Ok(())
     }
 
-    pub fn mint(env: Env, project_id: String, quantity: i128, verification_record_ref: String) {
+    pub fn mint(
+        env: Env,
+        project_id: String,
+        quantity: i128,
+        verification_record_ref: String,
+    ) -> Result<(), Error> {
         let issuer: Address = env.storage().instance().get(&ISSUER_KEY).unwrap();
         issuer.require_auth();
 
@@ -34,16 +45,16 @@ impl CarbonCreditToken {
             (project_id.clone(),).into_val(&env),
         );
         if is_suspended {
-            panic!("project is suspended");
+            return Err(Error::ProjectSuspended);
         }
 
         if quantity <= 0 {
-            panic!("quantity must be positive");
+            return Err(Error::InvalidQuantity);
         }
 
         let supply_key = (Symbol::new(&env, "supply"), project_id.clone());
         if env.storage().persistent().has(&supply_key) {
-            panic!("over-issuance: token already minted for this project");
+            return Err(Error::OverIssuance);
         }
 
         let backing_key = (Symbol::new(&env, "backing"), project_id.clone());
@@ -62,20 +73,27 @@ impl CarbonCreditToken {
         let topics = (symbol_short!("mint"), project_id);
         env.events()
             .publish(topics, (quantity, verification_record_ref));
+        Ok(())
     }
 
-    pub fn transfer(env: Env, from: Address, to: Address, token_id: String, quantity: i128) {
+    pub fn transfer(
+        env: Env,
+        from: Address,
+        to: Address,
+        token_id: String,
+        quantity: i128,
+    ) -> Result<(), Error> {
         from.require_auth();
 
         if quantity <= 0 {
-            panic!("quantity must be positive");
+            return Err(Error::InvalidQuantity);
         }
 
         let from_key = (Symbol::new(&env, "balance"), from.clone(), token_id.clone());
         let from_balance: i128 = env.storage().persistent().get(&from_key).unwrap_or(0);
 
         if from_balance < quantity {
-            panic!("insufficient balance");
+            return Err(Error::InsufficientBalance);
         }
 
         let new_from = from_balance - quantity;
@@ -90,13 +108,20 @@ impl CarbonCreditToken {
         env.storage()
             .persistent()
             .set(&to_key, &(to_balance + quantity));
+        Ok(())
     }
 
-    pub fn retire(env: Env, wallet: Address, token_id: String, quantity: i128, reason: String) {
+    pub fn retire(
+        env: Env,
+        wallet: Address,
+        token_id: String,
+        quantity: i128,
+        reason: String,
+    ) -> Result<(), Error> {
         wallet.require_auth();
 
         if quantity <= 0 {
-            panic!("quantity must be positive");
+            return Err(Error::InvalidQuantity);
         }
 
         let bal_key = (
@@ -107,7 +132,7 @@ impl CarbonCreditToken {
         let balance: i128 = env.storage().persistent().get(&bal_key).unwrap_or(0);
 
         if balance < quantity {
-            panic!("insufficient balance");
+            return Err(Error::InsufficientBalance);
         }
 
         let new_balance = balance - quantity;
@@ -121,6 +146,7 @@ impl CarbonCreditToken {
         let topics = (symbol_short!("retire"), token_id);
         env.events()
             .publish(topics, (wallet, quantity, reason, timestamp));
+        Ok(())
     }
 
     pub fn balance(env: Env, wallet: Address, token_id: String) -> i128 {
@@ -162,8 +188,6 @@ mod tests {
         let quantity: i128 = 1000;
 
         env.mock_all_auths();
-        // Since we are mocking auths, we also need to mock the verification_records call if we don't register it.
-        // But for unit tests, we can just mock the contract call.
 
         client.mint(&project_id, &quantity, &verification_ref);
 

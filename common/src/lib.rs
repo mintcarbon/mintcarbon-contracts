@@ -13,4 +13,12 @@ pub enum Error {
     OverIssuance = 4,
     /// Requested resource was not found in storage.
     NotFound = 5,
+    /// Quantity must be positive.
+    InvalidQuantity = 6,
+    /// The contract has already been initialized.
+    AlreadyInitialized = 7,
+    /// The caller is not authorized to perform this operation.
+    Unauthorized = 8,
+    /// The project is suspended and cannot be minted.
+    ProjectSuspended = 9,
 }
