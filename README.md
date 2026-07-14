@@ -52,6 +52,7 @@ On-chain registry of verified carbon credit projects linking tokens to real-worl
 
 - Create immutable Verification_Records linking Registry name, certificate ID, Project ID, and timestamp
 - Suspend tokens associated with a revoked certificate
+- Reinstate previously suspended projects when certificates are restored
 - Query project metadata by Token ID
 
 ### AuditLog
@@ -125,6 +126,7 @@ contracts/
 ├── common/                 # Shared types, errors, auth utilities
 ├── scripts/
 │   ├── deploy.sh           # Deployment scripts
+│   ├── release.sh          # Production release with validation
 │   ├── upgrade.sh          # Governance upgrade helper
 │   └── verify.sh           # Verification/migration scripts
 └── tests/
@@ -186,7 +188,11 @@ We welcome contributions from the community! Please see the following documents 
 | `listing_created`     | Marketplace         | seller, token_id, quantity, price, listing_id, timestamp           |
 | `order_matched`       | Marketplace         | buyer, seller, token_id, quantity, unit_price, total, tx_hash      |
 | `listing_cancelled`   | Marketplace         | seller, listing_id, timestamp                                      |
+| `escrow_locked`       | Escrow              | listing_id, seller, token_id, quantity                             |
+| `escrow_released`     | Escrow              | listing_id, seller, token_id, quantity                             |
+| `escrow_settled`      | Escrow              | listing_id, buyer, token_id, quantity                              |
 | `certificate_revoked` | VerificationRecords | registry, cert_id, project_id, timestamp                           |
+| `reinstate`           | VerificationRecords | project_id                                                         |
 | `upgrade_proposed`    | Governance          | new_impl, scheduled_time, proposer                                 |
 | `upgrade_executed`    | Governance          | new_impl, timestamp                                                |
 
