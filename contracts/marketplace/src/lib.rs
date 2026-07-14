@@ -149,6 +149,10 @@ impl Marketplace {
     pub fn get_listing(env: Env, listing_id: u32) -> Option<ListingEntry> {
         env.storage().persistent().get(&listing_id)
     }
+
+    pub fn get_counter(env: Env) -> u32 {
+        env.storage().instance().get(&COUNTER).unwrap_or(0)
+    }
 }
 
 #[cfg(test)]
@@ -302,5 +306,19 @@ mod tests {
 
         let result = marketplace.try_place_order(&buyer, &1, &200);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_counter() {
+        let (env, marketplace, _token_id, _native, _issuer, seller, _buyer) = setup();
+
+        assert_eq!(marketplace.get_counter(), 0);
+
+        let token_id = String::from_str(&env, "project-001");
+        marketplace.create_listing(&seller, &token_id, &100, &10_000_000);
+        assert_eq!(marketplace.get_counter(), 1);
+
+        marketplace.create_listing(&seller, &token_id, &50, &5_000_000);
+        assert_eq!(marketplace.get_counter(), 2);
     }
 }
