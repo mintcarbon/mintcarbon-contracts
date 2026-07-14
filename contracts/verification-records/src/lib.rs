@@ -80,6 +80,32 @@ impl VerificationRecords {
             .publish((symbol_short!("cert_rev"), project_id), ());
     }
 
+    pub fn reinstate(env: Env, project_id: String) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .expect("not initialized");
+        admin.require_auth();
+
+        let key = (symbol_short!("record"), project_id.clone());
+        let mut record: Record = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .expect("record not found");
+
+        if !record.suspended {
+            panic!("record is not suspended");
+        }
+
+        record.suspended = false;
+        env.storage().persistent().set(&key, &record);
+
+        env.events()
+            .publish((symbol_short!("reinstate"), project_id), ());
+    }
+
     pub fn get_record(env: Env, project_id: String) -> Record {
         let key = (symbol_short!("record"), project_id);
         env.storage()
@@ -148,6 +174,37 @@ mod tests {
 
         client.suspend(&project_id);
         assert!(client.is_suspended(&project_id));
+    }
+
+    #[test]
+    fn test_reinstate() {
+        let (env, client, _issuer, _admin) = setup();
+
+        let registry = String::from_str(&env, "Verra");
+        let cert_id = String::from_str(&env, "V-123");
+        let project_id = String::from_str(&env, "P-001");
+
+        env.mock_all_auths();
+        client.create_record(&registry, &cert_id, &project_id);
+        client.suspend(&project_id);
+        assert!(client.is_suspended(&project_id));
+
+        client.reinstate(&project_id);
+        assert!(!client.is_suspended(&project_id));
+    }
+
+    #[test]
+    #[should_panic(expected = "record is not suspended")]
+    fn test_reinstate_not_suspended() {
+        let (env, client, _issuer, _admin) = setup();
+
+        let registry = String::from_str(&env, "Verra");
+        let cert_id = String::from_str(&env, "V-123");
+        let project_id = String::from_str(&env, "P-001");
+
+        env.mock_all_auths();
+        client.create_record(&registry, &cert_id, &project_id);
+        client.reinstate(&project_id);
     }
 
     #[test]
