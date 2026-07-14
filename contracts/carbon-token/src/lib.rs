@@ -10,6 +10,8 @@ pub struct CarbonCreditToken;
 
 #[contractimpl]
 impl CarbonCreditToken {
+    /// Initialize the token contract with an issuer and verification records contract.
+    /// Can only be called once.
     pub fn initialize(
         env: Env,
         issuer: Address,
@@ -25,6 +27,8 @@ impl CarbonCreditToken {
         Ok(())
     }
 
+    /// Mint carbon credit tokens for a verified project.
+    /// Enforces 1:1 backing with verification records and prevents over-issuance.
     pub fn mint(
         env: Env,
         project_id: String,
@@ -76,6 +80,8 @@ impl CarbonCreditToken {
         Ok(())
     }
 
+    /// Transfer tokens between wallets.
+    /// Verifies sender authorization and sufficient balance.
     pub fn transfer(
         env: Env,
         from: Address,
@@ -111,6 +117,8 @@ impl CarbonCreditToken {
         Ok(())
     }
 
+    /// Permanently retire (burn) tokens. Retired tokens cannot be transferred.
+    /// Records the retirement reason for audit purposes.
     pub fn retire(
         env: Env,
         wallet: Address,
@@ -149,6 +157,7 @@ impl CarbonCreditToken {
         Ok(())
     }
 
+    /// Query the token balance of a wallet for a given project.
     pub fn balance(env: Env, wallet: Address, token_id: String) -> i128 {
         let bal_key = (Symbol::new(&env, "balance"), wallet, token_id);
         env.storage().persistent().get(&bal_key).unwrap_or(0)
