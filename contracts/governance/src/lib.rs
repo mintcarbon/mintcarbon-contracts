@@ -132,7 +132,7 @@ impl Governance {
             .publish((symbol_short!("upg_exec"), proposal_id), proposal.new_impl);
     }
 
-    pub fn object(env: Env, objector: Address, _proposal_id: u32, reason: String) {
+    pub fn object(env: Env, objector: Address, reason: String) {
         objector.require_auth();
 
         let audit_log_addr: Address = env

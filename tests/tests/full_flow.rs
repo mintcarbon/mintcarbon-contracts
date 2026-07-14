@@ -85,7 +85,7 @@ fn test_full_flow() {
     assert_eq!(carbon_token.balance(&seller, &project_id), 400);
 
     // Check AuditLog via Governance object
-    governance.object(&buyer, &0, &String::from_str(&env, "Suspicious activity"));
+    governance.object(&buyer, &String::from_str(&env, "Suspicious activity"));
     assert!(audit_log.get_count() >= 1);
     assert!(audit_log.verify_chain(&0, &(audit_log.get_count() - 1)));
 
